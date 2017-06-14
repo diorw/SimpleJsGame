@@ -235,3 +235,17 @@ function setcolor(id,col){
     }
   }
 }
+//点击单元格事件
+	var sum;
+	var lian;
+	var bu;
+	function td(id){
+
+		var t=document.getElementById(id);
+		if(t.style.background=="white"){
+			setColor(id,'red');
+		}
+		else{
+			setColor(id,'white');
+		}
+
