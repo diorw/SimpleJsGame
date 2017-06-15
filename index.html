@@ -1,14 +1,208 @@
 <!doctype html>
-<html lang="en" class="no-js" content-type : text/html ;charset="GBK">
+<html lang="en" class="no-js">
 <head>
-<meta charset="gb2312">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" type="text/css" href="css/reset.css">
 <link rel="stylesheet"  type="text/css" href="css/style.css">
 <script src="js/modernizr.js"></script>
 <script language="javascript">
-  //¶¯Ì¬Éú³É±í¸ñ
+var DB = function( db_name, size ){
+     var _db = openDatabase(db_name, '1.0.0','', size );
+
+     return {
+
+         /**
+          * æ‰§è¡Œsqlï¼Œå›è°ƒè¿”å›å½±å“æ¡æ•°
+          */
+         execute:function( sql, param, callback ) {
+             //å‚æ•°å¤„ç†
+            if( !param ){
+                param = [];
+            }else if(typeof param == 'function' ){
+                callback = param;
+                param = [];
+            }
+
+             this.query( sql, param, function(result){
+                 if( typeof callback == 'function' ){
+                     callback(result.rowsAffected);
+                 }
+             });
+         },
+
+         /**
+          * æ‰§è¡Œsqlï¼Œå›è°ƒè¿”å›sqlæŸ¥è¯¢å¯¹è±¡
+          * æŸ¥è¯¢æ—¶ï¼Œæœ‰æ•°æ®è¿”å›æ•°ç»„ï¼Œæ— æ•°æ®è¿”å›0
+          * å¢åˆ æ”¹æ—¶ï¼šè¿”å›intï¼Œå½±å“æ¡æ•°
+          * void query( string[, function])
+          * void query( string[, array[, function]])
+          */
+         query:function(sql, param, callback){
+            //å‚æ•°å¤„ç†
+            if( !param ){
+                param = [];
+            }else if(typeof param == 'function' ){
+                callback = param;
+                param = [];
+            }
+
+            var self=this;
+            //åªæœ‰ä¸€ä¸ªå‚æ•°
+            _db.transaction(function (tx) {
+                //4ä¸ªå‚æ•°ï¼šsqlï¼Œæ›¿æ¢sqlä¸­é—®å·çš„æ•°ç»„ï¼ŒæˆåŠŸå›è°ƒï¼Œå‡ºé”™å›è°ƒ
+                tx.executeSql(sql,param,function(tx,result){
+                    if (typeof callback == 'function' ){
+                        callback(result);
+                    }
+                },self.onfail) ;
+            })
+        },
+        /**
+         * æ’å…¥ï¼Œå›è°ƒè¿”å›last id
+         * void insert( string, object[, function])
+         */
+        insert:function( table, data, callback ){
+            if( typeof data != 'object' && typeof callback == 'function' ){
+                callback(0);
+            }
+
+            var k=[];
+            var v=[];
+            var param=[];
+            for(var i in data ){
+                k.push(i);
+                v.push('?');
+                param.push(data[i]);
+            }
+            var sql="INSERT INTO "+table+"("+k.join(',')+")VALUES("+v.join(',')+")";
+
+            this.query(sql, param, function(result){
+                if ( typeof callback == 'function' ){
+                    callback(result.insertId);
+                }
+            });
+        },
+        /**
+         * ä¿®æ”¹ï¼Œå›è°ƒè¿”å›å½±å“æ¡æ•°
+         * void update( string, object[, string[, function]])
+         * void update( string, object[, string[, array[, function]]])
+         */
+        update:function( table, data, where, param, callback ){
+            //å‚æ•°å¤„ç†
+            if( !param ){
+                param = [];
+            }else if(typeof param == 'function' ){
+                callback = param;
+                param = [];
+            }
+
+            var set_info = this.mkWhere(data);
+            for(var i=set_info.param.length-1;i>=0; i--){
+                param.unshift(set_info.param[i]);
+            }
+            var sql = "UPDATE "+table+" SET "+set_info.sql;
+            if( where ){
+                sql += " WHERE "+where;
+            }
+
+            this.query(sql, param, function(result){
+                if( typeof callback == 'function' ){
+                    callback(result.rowsAffected);
+                }
+            });
+        },
+
+        /**
+         * åˆ é™¤
+         * void toDelete( string, string[, function]])
+         * void toDelete( string, string[, array[, function]])
+         */
+        toDelete:function( table, where, param, callback ){
+            //å‚æ•°å¤„ç†
+            if( !param ){
+                param = [];
+            }else if(typeof param == 'function' ){
+                callback = param;
+                param = [];
+            }
+
+            var sql = "DELETE FROM "+table+" WHERE "+where;
+            this.query(sql, param, function(result){
+                if( typeof callback == 'function' ){
+                    callback(result.rowsAffected);
+                }
+            });
+        },
+
+        /**
+         * æŸ¥è¯¢ï¼Œå›è°ƒè¿”å›ç»“æœé›†æ•°ç»„
+         * void fetch_all( string[, function] )
+         * void fetch_all( string[, param[, function]] )
+         */
+        fetchAll:function( sql, param, callback ){
+            //å‚æ•°å¤„ç†
+            if( !param ){
+                param = [];
+            }else if(typeof param == 'function' ){
+                callback = param;
+                param = [];
+            }
+
+            this.query( sql, param, function(result){
+                if (typeof callback == 'function' ){
+                    var out=[];
+
+                    if (result.rows.length){
+                        for (var i=0;i<result.rows.length;i++){
+                            out.push(result.rows.item(i));
+                        }
+                    }
+
+                    callback(out);
+                }
+            });
+        },
+
+        /**
+         * æŸ¥è¯¢è¡¨çš„ä¿¡æ¯
+         * table_name: è¡¨åç§°ï¼Œæ”¯æŒ % *ï¼Œ
+         */
+        showTables:function( table_name, callback){
+            this.fetchAll("select * from sqlite_master where type='table' and name like ?", [table_name], callback);
+        },
+
+
+        /**
+         * ç»„è£…æŸ¥è¯¢æ¡ä»¶
+         */
+        mkWhere:function(data){
+            var arr=[];
+            var param=[];
+            if( typeof data === 'object' ){
+                for (var i in data){
+                    arr.push(i+"=?");
+                    param.push(data[i]);
+                console.log('data.i:'+i);
+                }
+            }
+            return {sql:arr.join(' AND '),param:param};
+        },
+
+        /**
+         * é”™è¯¯å¤„ç†
+         */
+        onfail:function(tx,e){
+            console.log('sql error: '+e.message);
+        }
+     }
+}
+var db = new DB('C:\\Users\\wda\\wda.db',1024*1024*2);
+//db.query("CREATE TABLE ranktable (id integer primary key autoincrement,name text not null,rows int not null,times int not null)");
+db.showTables("ranktable",function(ret){console.log(ret)});
+//db.insert("ranktable",{id:1,name:'wda',rows:3,times:9});
+db.fetchAll('select * from ranktable',function(ret){console.log(ret)});
 	  var s;
     function buildBoard(size) {
 		s=size;
@@ -16,7 +210,7 @@
       	for (var x=0; x < size; x++) {
         	str+="<TR>"
         	for (var y=0; y < size; y++) {
-				str+="<td id="+x+""+y+" onclick='td(this.id)'  style='background:white'>&nbsp;</TD>"
+				        str+="<td id="+x+""+y+" onclick='td(this.id)'  style='background:white'>&nbsp;</TD>"
         	}
         	str+="</TR>"
       	}
@@ -25,20 +219,18 @@
     }
 
 
-
-	//ÉèÖÃµ¥Ôª¸ñ±äÉ«
 	function setTdColor(id,color){
 		document.getElementById(id).style.background=color;
 	}
 
-	//·µ»Øµ¥Ôª¸ñµÄÑÕÉ«
+
 	function returnColor(id){
 		var tdColor=document.getElementById(id).style.background;
 		return tdColor;
 
 	}
 
-	//ÅĞ¶Ïµã»÷µÄµ¥Ôª¸ñÊÇ·ñÊÇËÄ±ßµÄµ¥Ôª¸ñ
+
 	function idflag(id){
 		var iid=parseInt(id);
 		var shi=parseInt(iid/10);
@@ -52,11 +244,11 @@
 		}
 	}
 
-	//¸ù¾İµã»÷µ¥Ôª¸ñÀàĞÍ²»Í¬£¬Ê¹ÖÜÎ§µÄµ¥Ôª¸ñ±äÉ«
+
 	var b;
 	function setColor(id,col){
 		b=(s-1);
-		//±í¸ñËÄ¸ö½ÇµÄµ¥Ôª¸ñ
+
 		if(id=="0"+b||id==b+"0"||id==b+""+b||id=="00"){
 			document.getElementById(id).style.background=col;
 			if(id=='00'){
@@ -130,7 +322,7 @@
 		}
 
 
-		//ËÄ±ßµÄµ¥Ôª¸ñ
+
 		else if(idflag(id)){
 				for(var j=0;j<s;j++){
 					if(id=='0'+j){
@@ -222,7 +414,7 @@
 		}
 
 
-		//ÖĞ¼äµÄµ¥Ôª¸ñ
+
 		else{
 			for(var i=1;i<b;i++){
 				for(var j=1;j<b;j++){
@@ -257,7 +449,7 @@
 		}
 	}
 
-	//µã»÷µ¥Ôª¸ñÊÂ¼ş
+
 	var sum;
 	var lian;
 	var bu;
@@ -271,7 +463,7 @@
 			setColor(id,'white');
 		}
 
-		//¼ÆËã¸÷ÖÖÊı¾İ
+
 		sum++;
 		lian=0;
 		bu=0;
@@ -287,7 +479,7 @@
 			}
 		}
 		if(lian==count){
-			document.getElementById('tb').innerHTML="<font size=7 color='red'>³É¹¦</font>"
+			document.getElementById('tb').innerHTML="<font size=7 color='red'>???</font>"
 
 			console.log("ok");
 			save();
@@ -311,36 +503,16 @@
 		document.getElementById("tb").innerHTML=buildBoard(value);
 		document.getElementById("name").innerHTML=name;
 	}
-	var db = openDatabase('C:\\Users\\ACM\\test.db','','ÅÅĞĞ°ñ',204800);
-	if(db){
-		console.log("´´½¨³É¹¦");
-	}
-	function save(){
-		var row =   document.getElementById("size").value;
-		var times =   document.getElementById("bu").value;
-		var name =  document.getElementById("name").value;
-		db.transaction(function(tx){
-        tx.executeSql('select * from ranktable',[],function(tx,rs){
-					console.log(rs.rows.length);
-				});
-    });
-	}
-	function onSuccess(tx,rs){
-    alert("²Ù×÷³É¹¦");
 
-}
-//sqlÓï¾äÖ´ĞĞÊ§°ÜºóÖ´ĞĞµÄ»Øµ÷º¯Êı
-	function onError(tx,error){
-    alert("²Ù×÷Ê§°Ü£¬Ê§°ÜĞÅÏ¢£º"+ error.message);
-  }
 </script>
+
 <title>Ink Transition Effect | CodyHouse</title>
 </head>
 
 <body>
 <main class="cd-main-content">
 	<div class="center">
-		<a href="#0" class="cd-btn cd-modal-trigger">µã»÷ÊÔÊÔ</a><br><br><br>
+		<a href="#0" class="cd-btn cd-modal-trigger">ç‚¹å‡»è¯•è¯•</a><br><br><br>
 
 
 	</div>
@@ -348,45 +520,35 @@
 
 <div class="cd-modal">
 	<div class="modal-content">
-	<table width="715" height="142" border="1" align="center" >
-
-
-
-
-	<table width="715" height="142" border="1" align="center">
-	
-	
-	
-		
-
-  <tr>
+<table width="715" height="142" border="1" align="center" >
+<table width="715" height="142" border="1" align="center">
+<tr>
     <td height="50"><table width="709" height="46" border="1" bordercolor = "white">
       <tr>
-        <td width="41">×ÜÊı</td>
+        <td width="41">æ€»æ•°</td>
         <td width="48" id="count">&nbsp;</td>
-        <td width="59">µãÁÁÊı</td>
+        <td width="59">ç‚¹äº®æ•°</td>
         <td width="52" id="lian">&nbsp;</td>
-        <td width="71">Î´µãÁÁÊı</td>
+        <td width="71">æœªç‚¹äº®æ•°</td>
         <td width="45" id="bu">&nbsp;</td>
-        <td width="59">µã»÷Êı</td>
+        <td width="59">ç‚¹å‡»æ•°</td>
         <td width="46" id="sum">&nbsp;</td>
-        <td width="219">´óĞ¡
+        <td width="219">éš¾åº¦
           <input name="size" type="text" id="size" size="5" />
-          £¨3-10£©
-          <input type="button" name="button" id="button" value="¿ªÊ¼" onclick="init()" /></td>
-					<td width = "50" id = "inputname">ĞÕÃû
+          (3-10)
+          <input type="button" name="button" id="button" value="å¼€å§‹" onclick="init()" /></td>
+					<td width = "50" id = "inputname">å§“å
 						<input name = "name" type = "text" id = "name" size = "5"/>
 					</td>
       </tr>
     </table></td>
   </tr>
 
-  
   <tr>
     <td><div id="tb"></div></td>
   </tr>
   <tr>
-    <td height="25">ÓÎÏ·ÌáÊ¾£º½«ËùÓĞ·½¸ñ¶¼±ä³ÉºìÉ«¼´¿ÉÊ¤Àû</td>
+    <td height="25">æ¸¸æˆæç¤ºï¼šå°†æ‰€æœ‰æ–¹æ ¼éƒ½å˜æˆçº¢è‰²å³å¯èƒœåˆ©</td>
   </tr>
 </table>
 
@@ -401,8 +563,6 @@
 </div> <!-- .cd-transition-layer -->
 
 <script src="js/jquery-2.1.4.js"></script>
-
-<script src="js/game.js"></script>
 <script src="js/main.js"></script> <!-- Resource jQuery -->
 </body>
 </html>
