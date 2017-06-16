@@ -7,6 +7,8 @@
 <link rel="stylesheet" type="text/css" href="css/reset.css">
 <link rel="stylesheet"  type="text/css" href="css/style.css">
 <script src="js/modernizr.js"></script>
+<script src="js/jquery-2.1.4.js"></script>
+<script src="js/bootstrap_min.js"></script>
 <script language="javascript">
 var DB = function( db_name, size ){
      var _db = openDatabase(db_name, '1.0.0','', size );
@@ -496,7 +498,7 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
     //  var ids = parseInt(id);
 
 
-      loadall();
+    //  loadall();
 
 		}
 		document.getElementById('sum').innerHTML=sum;
@@ -520,11 +522,22 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
 	}
   function loadall(){
     var list = document.getElementById("list");
-    var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
-    db.fetchAll('select * from rank order by times',function(ret){
+  //  var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
+    var name = document.getElementById('name').value;
+    var sql = 'select * from rank';
+    if(document.getElementById("onlyme").checked==true){
+      sql+= " where name == \'"+name+"\'";
+    }
+    if(document.getElementById("sort_by_times").checked==true){
+      sql+=" order by times";
+    }else{
+      sql+=" order by rows";
+    }
+  //  console.log(sql);
+    db.fetchAll(sql,function(ret){
       console.log(ret.length);
       if(ret.length>=0){
-        var result = "<table border = 4>";
+        var result = "<table>";
         result+="<tr><th>序号</th><th>姓名</th><th>难度</th><th>步数</th></tr>"
         //console.log(ret[i].ids);
         for(var i = 0;i<ret.length;i++){
@@ -552,7 +565,7 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
 	</div>
 </main> <!-- .cd-main-content -->
 
-<div class="cd-modal">
+<div class="cd-modal" >
 	<div class="modal-content">
 <table width="715" height="142" border="1" align="center" >
 <table width="715" height="142" border="1" align="center">
@@ -582,11 +595,24 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
     <td><div id="tb"></div></td>
   </tr>
   <tr>
-    <td height="25">游戏提示：将所有方格都变成红色即可胜利 <input type = "button" name = "button" value = "显示排行榜" onclick="loadall()"/></td>
+    <td height="25">游戏提示：将所有方格都变成红色即可胜利
+      <br/><br/>
+      <input type = "button" name = "button" value = "显示排行榜" onclick="loadall()"/>
+
+      <br/>
+      <input type="checkbox" id="onlyme">
+      是否只显示指定用户(右上角输入姓名)
+
+      <br/>
+        <input type="checkbox" id="sort_by_times">
+        按步数排序(默认按难度排序)
+        <br/>
+    </td>
     <td> </td>
   </tr>
 </table>
 <div id = "list">
+
 
 </div>
 	</div> <!-- .modal-content -->
@@ -599,7 +625,7 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
 	<div class="bg-layer"></div>
 </div> <!-- .cd-transition-layer -->
 
-<script src="js/jquery-2.1.4.js"></script>
+
 <script src="js/main.js"></script> <!-- Resource jQuery -->
 </body>
 </html>
