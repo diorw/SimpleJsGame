@@ -198,11 +198,15 @@ var DB = function( db_name, size ){
         }
      }
 }
-var db = new DB('C:\\Users\\wda\\wda.db',1024*1024*2);
-//db.query("CREATE TABLE ranktable (id integer primary key autoincrement,name text not null,rows int not null,times int not null)");
-db.showTables("ranktable",function(ret){console.log(ret)});
-//db.insert("ranktable",{id:1,name:'wda',rows:3,times:9});
-db.fetchAll('select * from ranktable',function(ret){console.log(ret)});
+var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
+//db.toDelete("rank","1==1");
+//db.fetchAll('select * from rank',function(ret){console.log(ret)});
+//db.query("CREATE TABLE rank (ids int primary key ,name text not null,rows int not null,times int not null)");
+//db.insert("rank",{name:'wda',rows:3,times:9});
+//db.showTables("rank",function(ret){console.log(ret)});
+
+
+
 	  var s;
     function buildBoard(size) {
 		s=size;
@@ -479,10 +483,21 @@ db.fetchAll('select * from ranktable',function(ret){console.log(ret)});
 			}
 		}
 		if(lian==count){
-			document.getElementById('tb').innerHTML="<font size=7 color='red'>???</font>"
+			document.getElementById('tb').innerHTML="<font size=7 color='red'>成功</font>"
+      //db.fetchAll('select * from rank',function(ret){console.log(ret)});
+      var name =   document.getElementById('name').value;
+      var size =   document.getElementById('size').value;
+      var id;
+      db.fetchAll('select * from rank',function(ret){
+        id = ret.length+1;
 
-			console.log("ok");
-			save();
+        db.insert("rank",{ids:id,name:name,rows:size,times:sum});
+      });
+    //  var ids = parseInt(id);
+
+
+      loadall();
+
 		}
 		document.getElementById('sum').innerHTML=sum;
 		document.getElementById('lian').innerHTML=lian;
@@ -503,7 +518,26 @@ db.fetchAll('select * from ranktable',function(ret){console.log(ret)});
 		document.getElementById("tb").innerHTML=buildBoard(value);
 		document.getElementById("name").innerHTML=name;
 	}
+  function loadall(){
+    var list = document.getElementById("list");
+    var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
+    db.fetchAll('select * from rank order by times',function(ret){
+      console.log(ret.length);
+      if(ret.length>=0){
+        var result = "<table border = 4>";
+        result+="<tr><th>序号</th><th>姓名</th><th>难度</th><th>步数</th></tr>"
+        //console.log(ret[i].ids);
+        for(var i = 0;i<ret.length;i++){
+          result+="<tr><td>"+ret[i].ids+"</td><td>"+ret[i].name+"</td><td>"+ret[i].rows+"</td><td>"+ret[i].times+"<td></tr>";
+        }
+        list.innerHTML=result;
+      }else{
+        list.innerHTML="数据为空，赶紧挑战吧";
+      }
 
+    });
+  //  db.close();
+  }
 </script>
 
 <title>Ink Transition Effect | CodyHouse</title>
@@ -548,10 +582,13 @@ db.fetchAll('select * from ranktable',function(ret){console.log(ret)});
     <td><div id="tb"></div></td>
   </tr>
   <tr>
-    <td height="25">游戏提示：将所有方格都变成红色即可胜利</td>
+    <td height="25">游戏提示：将所有方格都变成红色即可胜利 <input type = "button" name = "button" value = "显示排行榜" onclick="loadall()"/></td>
+    <td> </td>
   </tr>
 </table>
+<div id = "list">
 
+</div>
 	</div> <!-- .modal-content -->
 
 	<a href="#0" class="modal-close">Close</a>
