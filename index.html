@@ -490,6 +490,9 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
       var name =   document.getElementById('name').value;
       var size =   document.getElementById('size').value;
       var id;
+      document.getElementById('subname').value = name;
+      document.getElementById('subrows').value = size;
+      document.getElementById('subtimes').value = sum;
       db.fetchAll('select * from rank',function(ret){
         id = ret.length+1;
 
@@ -580,13 +583,15 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
         <td width="45" id="bu">&nbsp;</td>
         <td width="59">点击数</td>
         <td width="46" id="sum">&nbsp;</td>
+
         <td width="219">难度
           <input name="size" type="text" id="size" size="5" />
           (3-10)
-          <input type="button" name="button" id="button" value="开始" onclick="init()" /></td>
+          <input type="button" name="start" id="button" value="开始" onclick="init()" /></td>
 					<td width = "50" id = "inputname">姓名
 						<input name = "name" type = "text" id = "name" size = "5"/>
 					</td>
+
       </tr>
     </table></td>
   </tr>
@@ -594,6 +599,7 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
   <tr>
     <td><div id="tb"></div></td>
   </tr>
+
   <tr>
     <td height="25">游戏提示：将所有方格都变成红色即可胜利
       <br/><br/>
@@ -611,6 +617,12 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
     <td> </td>
   </tr>
 </table>
+<form action="http://127.0.0.1:8081/process_get" method="GET">
+  Name:  <input type="text" name="name" id = "subname" disabled = "true">  <br>
+  rows:   <input type="text" name="rows" id = "subrows" disabled = "true"> <br>
+  times: <input type = "int" name="times" id = "subtimes" disabled = "true" >
+  <input type="submit" value="Submit">
+</form>
 <div id = "list">
 
 

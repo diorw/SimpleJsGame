@@ -13,6 +13,7 @@ var server= http.createServer(function(req,res){
   var file = documentRoot + url;
   var content_type;
   var temp = url.slice(url.length-3);
+  var json = url.slice(url.length-4);
   if(temp=="css"){
     content_type="text/css";
   }else{
@@ -39,6 +40,7 @@ var server= http.createServer(function(req,res){
       res.writeHeader(200,{
         'content-type' : content_type
       });
+
       res.write(data);//将index.html显示在客户端
       res.end();
 
