@@ -10,206 +10,7 @@
 <script src="js/jquery-2.1.4.js"></script>
 <script src="js/bootstrap_min.js"></script>
 <script language="javascript">
-var DB = function( db_name, size ){
-     var _db = openDatabase(db_name, '1.0.0','', size );
-
-     return {
-
-         /**
-          * 执行sql，回调返回影响条数
-          */
-         execute:function( sql, param, callback ) {
-             //参数处理
-            if( !param ){
-                param = [];
-            }else if(typeof param == 'function' ){
-                callback = param;
-                param = [];
-            }
-
-             this.query( sql, param, function(result){
-                 if( typeof callback == 'function' ){
-                     callback(result.rowsAffected);
-                 }
-             });
-         },
-
-         /**
-          * 执行sql，回调返回sql查询对象
-          * 查询时，有数据返回数组，无数据返回0
-          * 增删改时：返回int，影响条数
-          * void query( string[, function])
-          * void query( string[, array[, function]])
-          */
-         query:function(sql, param, callback){
-            //参数处理
-            if( !param ){
-                param = [];
-            }else if(typeof param == 'function' ){
-                callback = param;
-                param = [];
-            }
-
-            var self=this;
-            //只有一个参数
-            _db.transaction(function (tx) {
-                //4个参数：sql，替换sql中问号的数组，成功回调，出错回调
-                tx.executeSql(sql,param,function(tx,result){
-                    if (typeof callback == 'function' ){
-                        callback(result);
-                    }
-                },self.onfail) ;
-            })
-        },
-        /**
-         * 插入，回调返回last id
-         * void insert( string, object[, function])
-         */
-        insert:function( table, data, callback ){
-            if( typeof data != 'object' && typeof callback == 'function' ){
-                callback(0);
-            }
-
-            var k=[];
-            var v=[];
-            var param=[];
-            for(var i in data ){
-                k.push(i);
-                v.push('?');
-                param.push(data[i]);
-            }
-            var sql="INSERT INTO "+table+"("+k.join(',')+")VALUES("+v.join(',')+")";
-
-            this.query(sql, param, function(result){
-                if ( typeof callback == 'function' ){
-                    callback(result.insertId);
-                }
-            });
-        },
-        /**
-         * 修改，回调返回影响条数
-         * void update( string, object[, string[, function]])
-         * void update( string, object[, string[, array[, function]]])
-         */
-        update:function( table, data, where, param, callback ){
-            //参数处理
-            if( !param ){
-                param = [];
-            }else if(typeof param == 'function' ){
-                callback = param;
-                param = [];
-            }
-
-            var set_info = this.mkWhere(data);
-            for(var i=set_info.param.length-1;i>=0; i--){
-                param.unshift(set_info.param[i]);
-            }
-            var sql = "UPDATE "+table+" SET "+set_info.sql;
-            if( where ){
-                sql += " WHERE "+where;
-            }
-
-            this.query(sql, param, function(result){
-                if( typeof callback == 'function' ){
-                    callback(result.rowsAffected);
-                }
-            });
-        },
-
-        /**
-         * 删除
-         * void toDelete( string, string[, function]])
-         * void toDelete( string, string[, array[, function]])
-         */
-        toDelete:function( table, where, param, callback ){
-            //参数处理
-            if( !param ){
-                param = [];
-            }else if(typeof param == 'function' ){
-                callback = param;
-                param = [];
-            }
-
-            var sql = "DELETE FROM "+table+" WHERE "+where;
-            this.query(sql, param, function(result){
-                if( typeof callback == 'function' ){
-                    callback(result.rowsAffected);
-                }
-            });
-        },
-
-        /**
-         * 查询，回调返回结果集数组
-         * void fetch_all( string[, function] )
-         * void fetch_all( string[, param[, function]] )
-         */
-        fetchAll:function( sql, param, callback ){
-            //参数处理
-            if( !param ){
-                param = [];
-            }else if(typeof param == 'function' ){
-                callback = param;
-                param = [];
-            }
-
-            this.query( sql, param, function(result){
-                if (typeof callback == 'function' ){
-                    var out=[];
-
-                    if (result.rows.length){
-                        for (var i=0;i<result.rows.length;i++){
-                            out.push(result.rows.item(i));
-                        }
-                    }
-
-                    callback(out);
-                }
-            });
-        },
-
-        /**
-         * 查询表的信息
-         * table_name: 表名称，支持 % *，
-         */
-        showTables:function( table_name, callback){
-            this.fetchAll("select * from sqlite_master where type='table' and name like ?", [table_name], callback);
-        },
-
-
-        /**
-         * 组装查询条件
-         */
-        mkWhere:function(data){
-            var arr=[];
-            var param=[];
-            if( typeof data === 'object' ){
-                for (var i in data){
-                    arr.push(i+"=?");
-                    param.push(data[i]);
-                console.log('data.i:'+i);
-                }
-            }
-            return {sql:arr.join(' AND '),param:param};
-        },
-
-        /**
-         * 错误处理
-         */
-        onfail:function(tx,e){
-            console.log('sql error: '+e.message);
-        }
-     }
-}
-var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
-//db.toDelete("rank","1==1");
-//db.fetchAll('select * from rank',function(ret){console.log(ret)});
-//db.query("CREATE TABLE rank (ids int primary key ,name text not null,rows int not null,times int not null)");
-//db.insert("rank",{name:'wda',rows:3,times:9});
-//db.showTables("rank",function(ret){console.log(ret)});
-
-
-
-	  var s;
+    var s;
     function buildBoard(size) {
 		s=size;
       	var str = "<TABLE border=4 align='center' width=400 height=400>"
@@ -236,7 +37,9 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
 
 	}
 
-
+  var subname;
+  var subrows;
+  var subtimes;
 	function idflag(id){
 		var iid=parseInt(id);
 		var shi=parseInt(iid/10);
@@ -493,11 +296,10 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
       document.getElementById('subname').value = name;
       document.getElementById('subrows').value = size;
       document.getElementById('subtimes').value = sum;
-      db.fetchAll('select * from rank',function(ret){
-        id = ret.length+1;
 
-        db.insert("rank",{ids:id,name:name,rows:size,times:sum});
-      });
+
+
+
     //  var ids = parseInt(id);
 
 
@@ -523,37 +325,44 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
 		document.getElementById("tb").innerHTML=buildBoard(value);
 		document.getElementById("name").innerHTML=name;
 	}
-  function loadall(){
-    var list = document.getElementById("list");
-  //  var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
-    var name = document.getElementById('name').value;
-    var sql = 'select * from rank';
-    if(document.getElementById("onlyme").checked==true){
-      sql+= " where name == \'"+name+"\'";
-    }
-    if(document.getElementById("sort_by_times").checked==true){
-      sql+=" order by times";
-    }else{
-      sql+=" order by rows";
-    }
-  //  console.log(sql);
-    db.fetchAll(sql,function(ret){
-      console.log(ret.length);
-      if(ret.length>=0){
-        var result = "<table>";
-        result+="<tr><th>序号</th><th>姓名</th><th>难度</th><th>步数</th></tr>"
-        //console.log(ret[i].ids);
-        for(var i = 0;i<ret.length;i++){
-          result+="<tr><td>"+ret[i].ids+"</td><td>"+ret[i].name+"</td><td>"+ret[i].rows+"</td><td>"+ret[i].times+"<td></tr>";
-        }
-        list.innerHTML=result;
-      }else{
-        list.innerHTML="数据为空，赶紧挑战吧";
-      }
 
-    });
-  //  db.close();
+
+
+  function get_json(){
+    var list = document.getElementById("list");
+    $.getJSON("json",
+      function(ret){
+        console.log(ret);
+        if(ret.length>=0){
+
+          var result = "<table>";
+          result+="<tr><th>序号</th><th>姓名</th><th>难度</th><th>步数</th></tr>"
+          //console.log(ret[i].ids);
+          for(var i = 0;i<ret.length;i++){
+            result+="<tr><td>"+ret[i].name+"</td><td>"+ret[i].rows+"</td><td>"+ret[i].times+"</td></tr>";
+          }
+          list.innerHTML=result;
+        }else{
+          list.innerHTML="数据为空，赶紧挑战吧";
+        }
+
+      });
   }
+
+  $(function(){
+    $('#file_upload').click(function(){
+      var name = "wda";
+      var data = "names="+name+"&rows="+33+"&times="+5;
+      $.ajax({
+        url:"http://localhost:8081/service?"+data,
+        type:'post',
+
+        success:function(ret){
+            console.log(ret);
+        }
+      });
+    });
+  })
 </script>
 
 <title>Ink Transition Effect | CodyHouse</title>
@@ -602,33 +411,18 @@ var db = new DB('C:\\Users\\wda\\final.db',1024*1024*2);
 
   <tr>
     <td height="25">游戏提示：将所有方格都变成红色即可胜利
-      <br/><br/>
-      <input type = "button" name = "button" value = "显示排行榜" onclick="loadall()"/>
-
       <br/>
-      <input type="checkbox" id="onlyme">
-      是否只显示指定用户(右上角输入姓名)
 
-      <br/>
-        <input type="checkbox" id="sort_by_times">
-        按步数排序(默认按难度排序)
-        <br/>
     </td>
     <td> </td>
   </tr>
+  <input id = "file_upload" type  = "button" value=" upload">
 </table>
-<form action="http://127.0.0.1:8081/process_get" method="GET">
-  Name:  <input type="text" name="name" id = "subname" disabled = "true">  <br>
-  rows:   <input type="text" name="rows" id = "subrows" disabled = "true"> <br>
-  times: <input type = "int" name="times" id = "subtimes" disabled = "true" >
-  <input type="submit" value="Submit">
-</form>
+<a href = "javascript:get_json();">"显示排行榜"</a><br/>
 <div id = "list">
-
-
 </div>
 	</div> <!-- .modal-content -->
-
+        <!--action="http://127.0.0.1:8081/process_get"-->
 	<a href="#0" class="modal-close">Close</a>
 </div>
 <!-- .cd-modal -->
