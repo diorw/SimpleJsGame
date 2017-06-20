@@ -292,14 +292,22 @@
       //db.fetchAll('select * from rank',function(ret){console.log(ret)});
       var name =   document.getElementById('name').value;
       var size =   document.getElementById('size').value;
-      var id;
-      document.getElementById('subname').value = name;
-      document.getElementById('subrows').value = size;
-      document.getElementById('subtimes').value = sum;
+      $(function(){
+        $('#file_upload').click(function(){
+          var name = document.getElementById('name').value;
+          var rows = document.getElementById('size').value;
+          var times = sum;
+          var data = "names="+name+"&rows="+rows+"&times="+times;
+          $.ajax({
+            url:"http://localhost:8081/service?"+data,
+            type:'post',
 
-
-
-
+            success:function(ret){
+                console.log(ret);
+            }
+          });
+        });
+      })
     //  var ids = parseInt(id);
 
 
@@ -336,7 +344,7 @@
         if(ret.length>=0){
 
           var result = "<table>";
-          result+="<tr><th>序号</th><th>姓名</th><th>难度</th><th>步数</th></tr>"
+          result+="<tr><th>姓名</th><th>难度</th><th>步数</th></tr>"
           //console.log(ret[i].ids);
           for(var i = 0;i<ret.length;i++){
             result+="<tr><td>"+ret[i].name+"</td><td>"+ret[i].rows+"</td><td>"+ret[i].times+"</td></tr>";
@@ -349,20 +357,7 @@
       });
   }
 
-  $(function(){
-    $('#file_upload').click(function(){
-      var name = "wda";
-      var data = "names="+name+"&rows="+33+"&times="+5;
-      $.ajax({
-        url:"http://localhost:8081/service?"+data,
-        type:'post',
 
-        success:function(ret){
-            console.log(ret);
-        }
-      });
-    });
-  })
 </script>
 
 <title>Ink Transition Effect | CodyHouse</title>
